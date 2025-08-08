@@ -283,6 +283,7 @@ class StockTickerApp {
             const tickerItem = $(`
                 <div class="ticker-item">
                     <span class="ticker-symbol">${stock.symbol}</span>
+                    <canvas class="ticker-sparkline" id="sparkline-${stock.symbol}" width="60" height="20"></canvas>
                     <span class="ticker-price">$${stock.currentPrice.toFixed(2)}</span>
                     <span class="ticker-change ${changeClass}">
                         ${isPositive ? '+' : ''}${stock.change.toFixed(2)} 
@@ -292,6 +293,11 @@ class StockTickerApp {
             `);
             
             container.append(tickerItem);
+            
+            // Create sparkline after the element is added to DOM
+            setTimeout(() => {
+                this.createTickerSparkline(stock.symbol, stock.currentPrice, isPositive);
+            }, 0);
         });
 
         // Restart animation
@@ -373,6 +379,66 @@ class StockTickerApp {
                 }
             }
         });
+    }
+
+    createTickerSparkline(symbol, currentPrice, isPositive) {
+        const canvas = document.getElementById(`sparkline-${symbol}`);
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        // Clear canvas
+        ctx.clearRect(0, 0, width, height);
+        
+        // Generate simple sparkline data (10 points)
+        const points = 10;
+        const data = [];
+        const basePrice = currentPrice;
+        
+        for (let i = 0; i < points; i++) {
+            const variation = (Math.random() - 0.5) * 0.05; // 5% variation
+            const price = basePrice * (1 + variation * (1 - i / points)); // Trend towards current price
+            data.push(price);
+        }
+        
+        // Ensure last point is current price
+        data[data.length - 1] = currentPrice;
+        
+        // Find min and max for scaling
+        const min = Math.min(...data);
+        const max = Math.max(...data);
+        const range = max - min || 1;
+        
+        // Set line color based on trend
+        ctx.strokeStyle = isPositive ? '#00ff88' : '#ff4757';
+        ctx.lineWidth = 1.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        // Draw sparkline
+        ctx.beginPath();
+        for (let i = 0; i < data.length; i++) {
+            const x = (i / (data.length - 1)) * (width - 4) + 2;
+            const y = height - 2 - ((data[i] - min) / range) * (height - 4);
+            
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        }
+        ctx.stroke();
+        
+        // Add subtle fill
+        ctx.globalAlpha = 0.2;
+        ctx.fillStyle = isPositive ? '#00ff88' : '#ff4757';
+        ctx.lineTo(width - 2, height - 2);
+        ctx.lineTo(2, height - 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 1;
     }
 
     startDataRefresh() {
