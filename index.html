@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Stock Ticker - Real-Time Market Data</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <h1>StockTicker Pro</h1>
+            </div>
+            <div class="market-status">
+                <div class="status-indicator">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="marketStatus">Market Open</span>
+                </div>
+                <div class="last-update">
+                    Last Update: <span id="lastUpdate">--:--:--</span>
+                </div>
+            </div>
+            <div class="auth-controls">
+                <div id="loginSection" class="login-form">
+                    <input type="text" id="username" placeholder="Username" value="admin">
+                    <input type="password" id="password" placeholder="Password" value="admin123">
+                    <button id="loginBtn">Login</button>
+                </div>
+                <div id="loggedInSection" class="logged-in" style="display: none;">
+                    <span id="welcomeUser"></span>
+                    <button id="logoutBtn">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- Scrolling Ticker -->
+        <div class="ticker-scroll">
+            <div class="ticker-container">
+                <div class="ticker-content" id="tickerScroll">
+                    <!-- Scrolling ticker items will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <div class="container">
+                <div class="view-toggle">
+                    <button class="toggle-btn active" data-view="grid">
+                        <i class="fas fa-th-large"></i> Grid View
+                    </button>
+                    <button class="toggle-btn" data-view="scroll">
+                        <i class="fas fa-arrows-alt-h"></i> Scroll View
+                    </button>
+                </div>
+                <div class="refresh-control">
+                    <button id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <span class="next-update">Next update in: <span id="countdown">60</span>s</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid View -->
+        <div class="stock-grid active" id="stockGrid">
+            <div class="container">
+                <div class="grid-header">
+                    <h2>Live Market Data</h2>
+                    <div class="grid-stats">
+                        <span class="stat">
+                            <span class="stat-label">Total Symbols:</span>
+                            <span class="stat-value" id="totalSymbols">--</span>
+                        </span>
+                        <span class="stat">
+                            <span class="stat-label">Last Minute:</span>
+                            <span class="stat-value" id="lastMinute">--:--</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="stock-cards" id="stockCards">
+                    <!-- Stock cards will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading market data...</p>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal" id="errorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> Error</h3>
+                <button class="close-btn" id="closeErrorModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage">An error occurred while fetching data.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
