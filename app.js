@@ -22,6 +22,9 @@ class StockTickerApp {
         } else {
             this.hideLoading();
         }
+        
+        // Add table header click handlers for sorting
+        this.setupTableSorting();
     }
 
     setupEventListeners() {
@@ -218,57 +221,62 @@ class StockTickerApp {
     }
 
     updateStockDisplay() {
-        const container = $('#stockCards');
-        container.empty();
+        const tbody = $('#stockTableBody');
+        tbody.empty();
 
         this.stockData.forEach(stock => {
-            const card = this.createStockCard(stock);
-            container.append(card);
+            const row = this.createStockTableRow(stock);
+            tbody.append(row);
         });
 
-        // Animate cards
-        $('.stock-card').addClass('fade-in');
+        // Create sparklines after DOM update
+        setTimeout(() => {
+            this.stockData.forEach(stock => {
+                this.createSparkline(stock.symbol);
+            });
+        }, 100);
+
+        // Animate rows
+        $('.stock-row').addClass('fade-in');
     }
 
-    createStockCard(stock) {
+    createStockTableRow(stock) {
         const isPositive = stock.change >= 0;
-        const trendClass = isPositive ? 'up' : 'down';
         const changeClass = isPositive ? 'positive' : 'negative';
         const trendIcon = isPositive ? 'fa-arrow-up' : 'fa-arrow-down';
+        const trendClass = isPositive ? 'trend-up' : 'trend-down';
 
         return $(`
-            <div class="stock-card">
-                <div class="card-header">
-                    <div class="symbol">${stock.symbol}</div>
-                    <div class="trend-arrow ${trendClass}">
-                        <i class="fas ${trendIcon}"></i>
+            <tr class="stock-row ${trendClass}" data-symbol="${stock.symbol}">
+                <td class="symbol-cell">
+                    <div class="symbol-wrapper">
+                        <span class="symbol-text">${stock.symbol}</span>
+                        <i class="fas ${trendIcon} trend-arrow ${changeClass}"></i>
                     </div>
-                </div>
-                <div class="price-section">
-                    <div class="current-price">$${stock.currentPrice.toFixed(2)}</div>
-                    <div class="price-change">
-                        <span class="change-amount ${changeClass}">
-                            ${isPositive ? '+' : ''}${stock.change.toFixed(2)}
-                        </span>
-                        <span class="change-percent ${changeClass}">
-                            (${isPositive ? '+' : ''}${stock.changePercent.toFixed(2)}%)
-                        </span>
-                    </div>
-                </div>
-                <div class="price-range">
-                    <div class="range-item">
-                        <div class="range-label">Day High</div>
-                        <div class="range-value high">$${stock.high.toFixed(2)}</div>
-                    </div>
-                    <div class="range-item">
-                        <div class="range-label">Day Low</div>
-                        <div class="range-value low">$${stock.low.toFixed(2)}</div>
-                    </div>
-                </div>
-                <div class="sparkline-container">
-                    <canvas class="sparkline-canvas" id="chart-${stock.symbol}"></canvas>
-                </div>
-            </div>
+                </td>
+                <td class="price-cell">
+                    <span class="current-price">$${stock.currentPrice.toFixed(2)}</span>
+                </td>
+                <td class="change-cell">
+                    <span class="change-amount ${changeClass}">
+                        ${isPositive ? '+' : ''}${stock.change.toFixed(2)}
+                    </span>
+                </td>
+                <td class="change-percent-cell">
+                    <span class="change-percent ${changeClass}">
+                        ${isPositive ? '+' : ''}${stock.changePercent.toFixed(2)}%
+                    </span>
+                </td>
+                <td class="high-cell">
+                    <span class="day-high">$${stock.high.toFixed(2)}</span>
+                </td>
+                <td class="low-cell">
+                    <span class="day-low">$${stock.low.toFixed(2)}</span>
+                </td>
+                <td class="sparkline-cell">
+                    <canvas class="table-sparkline" id="chart-${stock.symbol}" width="80" height="30"></canvas>
+                </td>
+            </tr>
         `);
     }
 
@@ -345,6 +353,12 @@ class StockTickerApp {
         const ctx = canvas.getContext('2d');
         const data = this.generateSparklineData(symbol);
         
+        // Get stock info for color determination
+        const stock = this.stockData.find(s => s.symbol === symbol);
+        const isPositive = stock ? stock.change >= 0 : true;
+        const chartColor = isPositive ? '#00ff88' : '#ff4757';
+        const chartBgColor = isPositive ? 'rgba(0, 255, 136, 0.1)' : 'rgba(255, 71, 87, 0.1)';
+        
         // Destroy existing chart
         if (this.chartInstances[symbol]) {
             this.chartInstances[symbol].destroy();
@@ -356,8 +370,8 @@ class StockTickerApp {
                 labels: Array(data.length).fill(''),
                 datasets: [{
                     data: data,
-                    borderColor: '#00d4aa',
-                    backgroundColor: 'rgba(0, 212, 170, 0.1)',
+                    borderColor: chartColor,
+                    backgroundColor: chartBgColor,
                     borderWidth: 2,
                     fill: true,
                     pointRadius: 0,
@@ -368,7 +382,8 @@ class StockTickerApp {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    tooltip: { enabled: false }
                 },
                 scales: {
                     x: { display: false },
@@ -376,6 +391,9 @@ class StockTickerApp {
                 },
                 elements: {
                     point: { radius: 0 }
+                },
+                interaction: {
+                    intersect: false
                 }
             }
         });
@@ -482,7 +500,7 @@ class StockTickerApp {
     clearStockData() {
         this.stockData = [];
         this.previousData = {};
-        $('#stockCards').empty();
+        $('#stockTableBody').empty();
         $('#tickerScroll').empty();
         $('#totalSymbols').text('--');
         $('#lastMinute').text('--:--');
@@ -507,6 +525,36 @@ class StockTickerApp {
 
     hideModal() {
         $('#errorModal').removeClass('show');
+    }
+
+    setupTableSorting() {
+        $(document).on('click', '.stock-table th', (e) => {
+            const column = $(e.target).text().trim().toLowerCase();
+            this.sortStockData(column);
+        });
+    }
+
+    sortStockData(column) {
+        const sortMap = {
+            'symbol': 'symbol',
+            'last price': 'currentPrice',
+            'change': 'change',
+            'change %': 'changePercent',
+            'day high': 'high',
+            'day low': 'low'
+        };
+        
+        const sortKey = sortMap[column];
+        if (!sortKey) return;
+        
+        this.stockData.sort((a, b) => {
+            if (sortKey === 'symbol') {
+                return a[sortKey].localeCompare(b[sortKey]);
+            }
+            return b[sortKey] - a[sortKey]; // Descending order for numbers
+        });
+        
+        this.updateStockDisplay();
     }
 }
 

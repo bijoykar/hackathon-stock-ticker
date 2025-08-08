@@ -79,13 +79,30 @@
                             <span class="stat-value" id="totalSymbols">--</span>
                         </span>
                         <span class="stat">
-                            <span class="stat-label">Last Minute:</span>
+                            <span class="stat-label">Last Update:</span>
                             <span class="stat-value" id="lastMinute">--:--</span>
                         </span>
                     </div>
                 </div>
-                <div class="stock-cards" id="stockCards">
-                    <!-- Stock cards will be populated here -->
+                
+                <!-- Stock Table -->
+                <div class="stock-table-container">
+                    <table class="stock-table" id="stockTable">
+                        <thead>
+                            <tr>
+                                <th class="symbol-col">Symbol</th>
+                                <th class="price-col">Last Price</th>
+                                <th class="change-col">Change</th>
+                                <th class="change-percent-col">Change %</th>
+                                <th class="high-col">Day High</th>
+                                <th class="low-col">Day Low</th>
+                                <th class="sparkline-col">Chart</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockTableBody">
+                            <!-- Stock rows will be populated here -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
